@@ -1,0 +1,78 @@
+name: Build CapitalFlow APK
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build CapitalFlow APK
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Verify Gradle Wrapper
+        run: |
+          test -f ./gradlew
+          test -f ./gradlew.bat
+          test -f ./gradle/wrapper/gradle-wrapper.jar
+          test -f ./gradle/wrapper/gradle-wrapper.properties
+          echo "Gradle Wrapper lengkap."
+
+      - name: Check Project Structure
+        run: |
+          echo "=== ROOT PROJECT ==="
+          pwd
+          ls -la
+
+          echo "=== APP DIRECTORY ==="
+          ls -la app
+
+          echo "=== IMPORTANT FILES ==="
+          test -f settings.gradle
+          test -f build.gradle
+          test -f app/build.gradle
+
+          echo "Struktur project Android ditemukan."
+
+      - name: Check Gradle Projects
+        run: ./gradlew projects
+
+      - name: Check Gradle Tasks
+        run: ./gradlew tasks --all
+
+      - name: Build CapitalFlow Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Verify APK
+        run: |
+          test -f app/build/outputs/apk/debug/app-debug.apk
+          echo "APK MARA berhasil dibuat."
+
+      - name: Upload CapitalFlow APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CapitalFlow-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
